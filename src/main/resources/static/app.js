@@ -62,6 +62,12 @@ function updateCounts() {
   updateCount('compareMessage', 'countB', 'hintB');
 }
 
+function updateFormatHint() {
+  $('formatHint').textContent = isHexFormat()
+    ? 'Hex bytes: enter the entire frame as byte pairs. Spaces, colons, and hyphens are allowed.'
+    : 'ASCII frame: four MTI digits, a hexadecimal bitmap, then field data. Use the hex option for binary frames.';
+}
+
 ['message', 'compareMessage'].forEach(id => {
   $(id).addEventListener('input', updateCounts);
   $(id).addEventListener('keydown', event => {
@@ -100,12 +106,21 @@ $('swap').addEventListener('click', () => {
   updateCounts();
 });
 
-$('example').addEventListener('click', () => {
+function loadExample(scrollToWorkbench = false) {
+  $('format').value = 'ASCII_HEX_BITMAP';
+  store.set('inspectdiff.format', $('format').value);
+  $('header').value = '0';
+  store.set('inspectdiff.header', '0');
   $('message').value = EXAMPLE_A;
   $('compareMessage').value = EXAMPLE_B;
   updateCounts();
-  $('decode').focus();
-});
+  updateFormatHint();
+  if (scrollToWorkbench) $('workbench').scrollIntoView();
+  $('decode').focus({ preventScroll: true });
+}
+
+$('example').addEventListener('click', () => loadExample());
+$('heroExample').addEventListener('click', () => loadExample(true));
 
 $('clear').addEventListener('click', () => {
   $('message').value = '';
@@ -123,6 +138,7 @@ $('clear').addEventListener('click', () => {
   const header = store.get('inspectdiff.header');
   if (header !== null && header !== '') $('header').value = header;
   updateCounts();
+  updateFormatHint();
 })();
 
 [['format', 'inspectdiff.format', el => el.value],
@@ -130,6 +146,7 @@ $('clear').addEventListener('click', () => {
   $(id).addEventListener('change', () => {
     store.set(key, read($(id)));
     updateCounts();
+    updateFormatHint();
     // Re-run so the visible results always match the selected options.
     if (state.result && !state.busy) decode({ scroll: false });
   });
@@ -438,6 +455,15 @@ async function decode({ scroll = true } = {}) {
     state.result = null;
     setNotice('Message A is empty. Paste a frame or load the example.', 'error');
     $('message').focus();
+    return;
+  }
+
+  const headerValue = Number($('header').value);
+  if ($('header').value.trim() === '' || !Number.isInteger(headerValue) || headerValue < 0 || headerValue > 64) {
+    hideOutput();
+    state.result = null;
+    setNotice('Header bytes must be a whole number from 0 to 64.', 'error');
+    $('header').focus();
     return;
   }
 

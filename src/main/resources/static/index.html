@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>InspectDiff - ISO 8583 decoder</title>
+  <meta name="description" content="InspectDiff is a free ISO 8583 workbench for decoding message bitmaps, inspecting data elements, and comparing frames.">
+  <title>InspectDiff — Explore ISO 8583 messages</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -19,18 +20,54 @@
       <span class="brand-name">InspectDiff</span>
       <span class="brand-sub">ISO 8583 workbench</span>
     </div>
-    <span class="top-note">Local session, no message storage</span>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="#workbench">Decoder</a>
+      <a href="#message-anatomy">Message anatomy</a>
+      <a href="#mti-guide">MTI</a>
+      <a href="#bitmap-guide">Bitmap</a>
+      <a href="#data-elements">Data elements</a>
+    </nav>
   </header>
 
   <main>
     <section class="intro" aria-labelledby="page-title">
-      <h1 id="page-title">Decode and compare ISO 8583 frames</h1>
-      <p>Paste a raw frame to see its MTI, bitmap and fields. Add a second frame to see exactly which fields changed.</p>
+      <div class="hero-copy">
+        <span class="eyebrow hero-eyebrow"><span class="live-dot"></span> PAYMENT MESSAGE LAB · ISO 8583</span>
+        <h1 id="page-title">Payments speak in bytes.<br><span>Now you can read them.</span></h1>
+        <p>Decode a raw transaction frame into its message type, bitmap and data elements. Explore what each field means—or compare two messages to find exactly what changed.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#workbench">Start inspecting <span aria-hidden="true">↘</span></a>
+          <button id="heroExample" class="btn btn-outline" type="button">Load sample messages</button>
+        </div>
+        <div class="hero-proof"><span><b>01</b> Decode</span><span><b>02</b> Explore fields</span><span><b>03</b> Compare frames</span></div>
+        <p class="hero-note"><span>Local-first workflow</span> · No account · Raw messages are not stored by this page</p>
+      </div>
+      <div class="hero-visual" aria-label="Visual representation of an ISO 8583 payment message structure">
+        <div class="visual-glow"></div>
+        <div class="visual-caption"><span>MESSAGE STRUCTURE</span><span class="caption-dot">● LIVE SCHEMA</span></div>
+        <div class="message-stack">
+          <div class="stack-item stack-mti"><div><span class="stack-label">MTI</span><small>Message type indicator</small></div><code>0200</code><span class="stack-num">01</span></div>
+          <div class="stack-item stack-bitmap"><div><span class="stack-label">BITMAP</span><small>Presence map · 64 bits</small></div><code>7238 0000 0000 0000</code><span class="stack-num">02</span></div>
+          <div class="stack-item stack-de"><div><span class="stack-label">DATA ELEMENTS</span><small>Transaction details</small></div><code>DE 3 · DE 4 · DE 11 · …</code><span class="stack-num">03</span></div>
+        </div>
+        <div class="visual-bottom"><span class="visual-check">✓</span><span>Readable structure from a raw frame</span><span class="visual-arrow">↗</span></div>
+        <div class="floating-tag tag-top"><span class="tag-mark">↳</span> Field map</div>
+        <div class="floating-tag tag-bottom"><span class="tag-mark">≋</span> Compare payloads</div>
+      </div>
     </section>
 
-    <section class="workspace" aria-labelledby="input-title">
+    <section class="quick-explainer" id="message-anatomy" aria-label="ISO 8583 message anatomy">
+      <div class="quick-title"><span class="section-kicker">THE BASICS</span><h2>One frame. Three building blocks.</h2><p>Each part has a job. Together, they make a compact message that payment systems can understand.</p></div>
+      <div class="anatomy-grid">
+        <a class="anatomy-card" href="#mti-guide"><span class="anatomy-number">01</span><span class="anatomy-symbol symbol-mti">M</span><h3>MTI</h3><p>What kind of message is this—and what stage of the exchange?</p><span class="anatomy-link">Explore MTI <b>↗</b></span></a>
+        <a class="anatomy-card" href="#bitmap-guide"><span class="anatomy-number">02</span><span class="anatomy-symbol symbol-bitmap">▦</span><h3>Bitmap</h3><p>A compact map that tells you which data elements are present.</p><span class="anatomy-link">Explore bitmap <b>↗</b></span></a>
+        <a class="anatomy-card" href="#data-elements"><span class="anatomy-number">03</span><span class="anatomy-symbol symbol-de">DE</span><h3>Data elements</h3><p>The actual values—amount, trace, currency, card and response details.</p><span class="anatomy-link">Explore fields <b>↗</b></span></a>
+      </div>
+    </section>
+
+    <section id="workbench" class="workspace" aria-labelledby="input-title">
       <div class="section-head">
-        <h2 id="input-title">Input frames</h2>
+        <div><span class="section-kicker">01 / WORKBENCH</span><h2 id="input-title">Decode a frame</h2><p class="section-description">Start with message A. Add message B when you want a field-by-field comparison.</p></div>
         <div class="section-actions">
           <span class="shortcut">Ctrl or Cmd + Enter to decode</span>
           <button id="example" class="btn btn-ghost" type="button">Load example</button>
@@ -88,11 +125,12 @@
           <span class="btn-label">Inspect and decode</span>
         </button>
       </div>
+      <p id="formatHint" class="format-help">ASCII frame: four MTI digits, a hexadecimal bitmap, then field data. Use the hex option for binary frames.</p>
     </section>
 
     <section id="resultsSection" class="results" aria-labelledby="results-title">
       <div class="section-head">
-        <h2 id="results-title" tabindex="-1">Decoded output</h2>
+        <div><span class="section-kicker">02 / RESULTS</span><h2 id="results-title" tabindex="-1">Decoded output</h2></div>
         <div class="section-actions">
           <button id="download" class="btn btn-ghost" type="button" hidden>Download JSON</button>
           <button id="copy" class="btn btn-ghost" type="button" hidden>Copy JSON</button>
@@ -148,11 +186,53 @@
         </div>
       </div>
     </section>
+
+    <section id="how-it-works" class="guide-section" aria-labelledby="guide-title">
+      <div class="guide-heading"><span class="section-kicker">MESSAGE FLOW</span><h2 id="guide-title">How a message is read</h2><p>The decoder starts at the front of the frame and uses the bitmap to know which fields to read next. Field definitions and encodings can vary by payment network.</p></div>
+      <div class="steps">
+        <article><span class="step-number">01 / IDENTIFY</span><h3>Read the MTI</h3><p>The four-character Message Type Indicator describes the message version, class, function and origin. For example, <code>0200</code> commonly represents a financial transaction request.</p></article>
+        <article><span class="step-number">02 / LOCATE</span><h3>Check the bitmap</h3><p>Each bit maps to a data-element number. A set bit means that field is included. The first bit can signal that a secondary bitmap follows.</p></article>
+        <article><span class="step-number">03 / DECODE</span><h3>Read data elements</h3><p>Fields are interpreted in numeric order using each element’s format and length rules—fixed, variable, numeric, text or binary.</p></article>
+      </div>
+    </section>
+
+    <section id="mti-guide" class="concept-section" aria-labelledby="mti-title">
+      <div class="concept-heading"><span class="section-kicker">01 / MESSAGE TYPE INDICATOR</span><h2 id="mti-title">MTI — the message’s intent</h2><p>The MTI is four digits. Each position adds context about the message, rather than describing a transaction field.</p></div>
+      <div class="concept-layout">
+        <div class="mti-card"><div class="mti-digits"><span><b>0</b><small>Version</small></span><span><b>2</b><small>Class</small></span><span><b>0</b><small>Function</small></span><span><b>0</b><small>Origin</small></span></div><div class="mti-example"><span>EXAMPLE MTI</span><code>0200</code><p>Financial transaction request</p></div></div>
+        <div class="mti-breakdown">
+          <article><span class="digit-index">DIGIT 1</span><h3>Version</h3><p>Identifies the ISO 8583 version family used by the message.</p></article>
+          <article><span class="digit-index">DIGIT 2</span><h3>Message class</h3><p>Broad category such as authorization, financial, reversal, reconciliation or network management.</p></article>
+          <article><span class="digit-index">DIGIT 3</span><h3>Message function</h3><p>Indicates whether it is a request, response, advice, notification or another message role.</p></article>
+          <article><span class="digit-index">DIGIT 4</span><h3>Message origin</h3><p>Describes where the message originated or its role in the exchange, depending on the version/profile.</p></article>
+        </div>
+      </div>
+      <div class="mti-pairs"><span><b>0200</b> Financial request</span><span><b>0210</b> Financial response</span><span><b>0400</b> Reversal request</span><span><b>0800</b> Network management</span><small>Examples are common conventions; exact MTI usage depends on your network.</small></div>
+    </section>
+
+    <section id="bitmap-guide" class="concept-section" aria-labelledby="bitmap-title">
+      <div class="concept-heading"><span class="section-kicker">02 / FIELD PRESENCE MAP</span><h2 id="bitmap-title">Bitmap — the message’s index</h2><p>The bitmap is a compact sequence of bits. It does not carry field values; it tells the receiver which data elements appear in the payload.</p></div>
+      <div class="bitmap-layout">
+        <div class="bitmap-demo"><div class="bitmap-demo-head"><span>PRIMARY BITMAP · 64 BITS</span><span>HEX VIEW</span></div><div class="bitmap-grid" aria-label="Illustrative bitmap grid"><span class="on">1</span><span class="on">2</span><span class="on">3</span><span class="off">4</span><span class="on">5</span><span class="off">6</span><span class="off">7</span><span class="on">8</span><span class="off">9</span><span class="off">10</span><span class="on">11</span><span class="off">12</span><span class="off">13</span><span class="on">14</span><span class="off">15</span><span class="off">16</span><span class="off">17</span><span class="off">18</span><span class="off">19</span><span class="off">20</span><span class="off">21</span><span class="off">22</span><span class="off">23</span><span class="off">24</span><span class="off">25</span><span class="off">26</span><span class="off">27</span><span class="off">28</span><span class="off">29</span><span class="off">30</span><span class="off">31</span><span class="off">32</span><span class="off">33</span><span class="off">34</span><span class="off">35</span><span class="off">36</span><span class="off">37</span><span class="off">38</span><span class="off">39</span><span class="off">40</span><span class="off">41</span><span class="off">42</span><span class="off">43</span><span class="off">44</span><span class="off">45</span><span class="off">46</span><span class="off">47</span><span class="off">48</span><span class="off">49</span><span class="off">50</span><span class="off">51</span><span class="off">52</span><span class="off">53</span><span class="off">54</span><span class="off">55</span><span class="off">56</span><span class="off">57</span><span class="off">58</span><span class="off">59</span><span class="off">60</span><span class="off">61</span><span class="off">62</span><span class="off">63</span><span class="off">64</span></div><div class="bitmap-legend"><span><i class="legend-on"></i> Set bit = field included</span><span><i class="legend-off"></i> Unset bit = field omitted</span></div><div class="bitmap-note">Bit 1 is a special indicator: when set in the primary bitmap, a secondary bitmap is present.</div></div>
+        <div class="bitmap-copy"><article><h3>Primary bitmap</h3><p>Usually covers DE 1–64. The first bit is used to indicate whether a secondary bitmap follows; in many profiles DE 1 is not treated as an ordinary field.</p></article><article><h3>Secondary bitmap</h3><p>Extends the map to DE 65–128. Its presence is signaled by the primary bitmap’s first bit.</p></article><article><h3>Why it matters</h3><p>Without the bitmap, the receiver cannot reliably know which fields are present—or where the next field begins when lengths vary.</p></article></div>
+      </div>
+    </section>
+
+    <section id="data-elements" class="concept-section" aria-labelledby="de-title">
+      <div class="concept-heading"><span class="section-kicker">03 / TRANSACTION CONTENT</span><h2 id="de-title">Data elements — the actual details</h2><p>Each DE has a number and a defined data format. The bitmap announces presence; the data element holds the value.</p></div>
+      <div class="de-table-wrap"><table class="de-table"><thead><tr><th>DE</th><th>Common name</th><th>What it tells you</th><th>Example</th></tr></thead><tbody><tr><td>3</td><td>Processing code</td><td>Transaction type and processing context</td><td><code>000000</code></td></tr><tr><td>4</td><td>Amount, transaction</td><td>Transaction amount, often in minor units</td><td><code>000000001250</code></td></tr><tr><td>7</td><td>Transmission date & time</td><td>When the message was transmitted</td><td><code>1125183045</code></td></tr><tr><td>11</td><td>System trace audit number</td><td>Trace value used to follow a transaction</td><td><code>123456</code></td></tr><tr><td>39</td><td>Response code</td><td>Outcome or reason code returned by the receiver</td><td><code>00</code></td></tr><tr><td>49</td><td>Currency code, transaction</td><td>Currency represented by a numeric code</td><td><code>840</code></td></tr></tbody></table></div>
+      <div class="de-callout"><span class="callout-icon">i</span><div><b>Field definitions are profile-specific.</b><p>Names, allowed values, lengths, encodings and even field usage may differ between processors and payment networks. Treat these as common examples—not a universal field dictionary.</p></div></div>
+    </section>
+
+    <section id="about-iso" class="about-section" aria-labelledby="about-title">
+      <div><span class="section-kicker">BACKGROUND</span><h2 id="about-title">What is ISO 8583?</h2></div>
+      <div class="about-copy"><p>ISO 8583 is an international standard for exchanging electronic messages between systems involved in card-based financial transactions. It defines a message structure and conventions for carrying transaction information, including requests, responses, reversals and network-management messages.</p><p>Think of it as a shared envelope and vocabulary for payment messages. The standard provides the structure, while individual payment networks and processors define the detailed field rules, values and operational behavior used in their environment.</p><p>InspectDiff helps developers and analysts explore that structure, troubleshoot integrations, and compare message frames. Always validate decoded fields against the specification for your processor or network.</p><a href="#workbench">Inspect a message <span aria-hidden="true">↑</span></a></div>
+    </section>
   </main>
 
   <footer>
     <span class="footer-name">InspectDiff</span>
-    <span>ISO 8583 field layouts vary by network and institution. Confirm the field specification for your integration.</span>
+    <span>Built to make payment messages easier to read. Confirm field layouts against your network specification.</span>
   </footer>
 
   <script src="./app.js"></script>
