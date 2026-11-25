@@ -512,7 +512,7 @@ footer span:last-child { max-width: 600px; text-align: right; }
   footer span:last-child { display: block; text-align: left; margin-top: 10px; }
 }
 
-/* ---------- InspectDiff visual refresh ---------- */
+/* ---------- Parser visual refresh ---------- */
 :root {
   --bg: #090e14;
   --panel: #101923;

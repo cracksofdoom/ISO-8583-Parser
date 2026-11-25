@@ -108,9 +108,9 @@ $('swap').addEventListener('click', () => {
 
 function loadExample(scrollToWorkbench = false) {
   $('format').value = 'ASCII_HEX_BITMAP';
-  store.set('inspectdiff.format', $('format').value);
+  store.set('Parser.format', $('format').value);
   $('header').value = '0';
-  store.set('inspectdiff.header', '0');
+  store.set('Parser.header', '0');
   $('message').value = EXAMPLE_A;
   $('compareMessage').value = EXAMPLE_B;
   updateCounts();
@@ -133,16 +133,16 @@ $('clear').addEventListener('click', () => {
 /* ---------- Settings (messages are never persisted) ---------- */
 
 (function restoreSettings() {
-  const format = store.get('inspectdiff.format');
+  const format = store.get('Parser.format');
   if (format && [...$('format').options].some(o => o.value === format)) $('format').value = format;
-  const header = store.get('inspectdiff.header');
+  const header = store.get('Parser.header');
   if (header !== null && header !== '') $('header').value = header;
   updateCounts();
   updateFormatHint();
 })();
 
-[['format', 'inspectdiff.format', el => el.value],
- ['header', 'inspectdiff.header', el => el.value]].forEach(([id, key, read]) => {
+[['format', 'Parser.format', el => el.value],
+ ['header', 'Parser.header', el => el.value]].forEach(([id, key, read]) => {
   $(id).addEventListener('change', () => {
     store.set(key, read($(id)));
     updateCounts();

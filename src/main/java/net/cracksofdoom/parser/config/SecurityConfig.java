@@ -16,42 +16,46 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .cors(Customizer.withDefaults())
-                .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; " +
-                                        "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"))
-                        .referrerPolicy(referrer -> referrer.policy(
-                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/", "/index.html", "/app.js", "/styles.css",
-                                "/actuator/health")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/messages/parse", "/api/v1/messages/compare")
-                        .permitAll()
-                        .anyRequest().denyAll())
-                .build();
-    }
-
-    @Bean
-    CorsConfigurationSource corsConfigurationSource(@Value("${app.allowed-origins:}") String origins) {
-        CorsConfiguration config = new CorsConfiguration();
-        if (!origins.isBlank()) {
-            config.setAllowedOrigins(Arrays.stream(origins.split(","))
-                    .map(String::trim).filter(value -> !value.isEmpty()).toList());
-        } else {
-            config.setAllowedOrigins(List.of());
+        @Bean
+        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                return http
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .cors(Customizer.withDefaults())
+                                .headers(headers -> headers
+                                                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                                                "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+                                                                                +
+                                                                                "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"))
+                                                .referrerPolicy(referrer -> referrer.policy(
+                                                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/app.js",
+                                                                "/styles.css",
+                                                                "/actuator/health")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/v1/messages/parse",
+                                                                "/api/v1/messages/compare")
+                                                .permitAll()
+                                                .anyRequest().denyAll())
+                                .build();
         }
-        config.setAllowedMethods(List.of("POST", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Content-Type"));
-        config.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
-        return source;
-    }
+
+        @Bean
+        CorsConfigurationSource corsConfigurationSource(@Value("${app.allowed-origins:}") String origins) {
+                CorsConfiguration config = new CorsConfiguration();
+                if (!origins.isBlank()) {
+                        config.setAllowedOrigins(Arrays.stream(origins.split(","))
+                                        .map(String::trim).filter(value -> !value.isEmpty()).toList());
+                } else {
+                        config.setAllowedOrigins(List.of());
+                }
+                config.setAllowedMethods(List.of("POST", "OPTIONS"));
+                config.setAllowedHeaders(List.of("Content-Type"));
+                config.setMaxAge(3600L);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/api/**", config);
+                return source;
+        }
 }

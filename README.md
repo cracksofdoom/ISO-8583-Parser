@@ -1,4 +1,4 @@
-# InspectDiff — ISO 8583 workbench
+# Parser — ISO 8583 workbench
 
 A Spring Boot 3 application with a browser workbench and JSON API for inspecting and comparing ISO 8583 frames. The browser site and API are served from the same origin. The existing `net.cracksofdoom.parser.field` library remains in the JAR.
 

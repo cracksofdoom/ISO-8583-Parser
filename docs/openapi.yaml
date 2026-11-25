@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: InspectDiff API
+  title: Parser API
   version: 1.0.0
   description: Public, masked ISO 8583 inspection API.
 servers:
