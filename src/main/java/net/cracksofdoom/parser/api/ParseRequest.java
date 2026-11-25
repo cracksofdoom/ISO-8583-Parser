@@ -13,5 +13,5 @@ public record ParseRequest(
                 String format,
                 @Min(0) @Max(64) Integer headerBytes,
                 Boolean revealSensitive,
-                @Size(max = 126) Map<Integer, IsoMessageParser.FieldSpec> fieldOverrides) {
+                @Size(max = 189) Map<Integer, IsoMessageParser.FieldSpec> fieldOverrides) {
 }

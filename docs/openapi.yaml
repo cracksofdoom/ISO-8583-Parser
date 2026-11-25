@@ -98,7 +98,8 @@ components:
           description: Must be false or omitted on the public API.
         fieldOverrides:
           type: object
-          maxProperties: 126
+          maxProperties: 189
+          description: Field IDs 2–192 are supported, excluding bitmap indicators 65 and 129. Tertiary fields require definitions here.
           additionalProperties:
             $ref: '#/components/schemas/FieldSpec'
     FieldSpec:
@@ -108,7 +109,7 @@ components:
         name: {type: string, maxLength: 80}
         length: {type: integer, minimum: 0, maximum: 999}
         maxLength: {type: integer, minimum: 0, maximum: 999}
-        type: {type: string, enum: [FIXED, LLVAR, LLLVAR]}
+        type: {type: string, enum: [FIXED, LVAR, LLVAR, LLLVAR]}
         encoding: {type: string, enum: [ASCII, BCD, HEX], default: ASCII}
         lengthEncoding: {type: string, enum: [ASCII, BCD], default: ASCII}
     ParseResult:

@@ -42,6 +42,42 @@ class IsoMessageParserTest {
     }
 
     @Test
+    void parsesLvarWithProfileOverride() {
+        var custom = new IsoMessageParser(Map.of(48, new IsoMessageParser.FieldSpec("Private", 0, 9, "LVAR")));
+        var result = custom.parse("020000000000000100005HELLO", "ASCII_HEX_BITMAP", 0, false);
+        assertEquals("HELLO", result.fields().get(48).value());
+        assertEquals(6, result.fields().get(48).encodedLength());
+        assertEquals(result.totalBytes(), result.consumedBytes());
+        assertThrows(IllegalArgumentException.class,
+                () -> new IsoMessageParser.FieldSpec("Private", 0, 10, "LVAR"));
+    }
+
+    @Test
+    void parsesTertiaryBitmapWithProfileDefinition() {
+        var custom = new IsoMessageParser(Map.of(130, new IsoMessageParser.FieldSpec("Tertiary data", 3, 3, "FIXED")));
+        String frame = "0200" + "8000000000000000" + "8000000000000000" + "4000000000000000" + "ABC";
+        var result = custom.parse(frame, "ASCII_HEX_BITMAP", 0, false);
+        assertEquals(48, result.bitmap().length());
+        assertEquals(java.util.List.of(130), result.presentFields());
+        assertEquals("ABC", result.fields().get(130).value());
+        assertEquals(result.totalBytes(), result.consumedBytes());
+        assertThrows(IsoMessageParser.ParseException.class,
+                () -> parser.parse(frame, "ASCII_HEX_BITMAP", 0, false));
+        assertThrows(IllegalArgumentException.class,
+                () -> new IsoMessageParser(Map.of(129, new IsoMessageParser.FieldSpec("Bitmap", 8, 8, "FIXED"))));
+    }
+
+    @Test
+    void decodesBinaryIccDataConsistentlyAcrossFrameFormats() {
+        String asciiFrame = "0200" + "0000000000000200" + "003" + "\u0001\u00A0\u00FF";
+        var ascii = parser.parse(asciiFrame, "ASCII_HEX_BITMAP", 0, true);
+        assertEquals("01A0FF", ascii.fields().get(55).value());
+        String hexFrame = "30323030" + "0000000000000200" + "303033" + "01A0FF";
+        var binary = parser.parse(hexFrame, "HEX_BINARY_BITMAP", 0, true);
+        assertEquals(ascii.fields().get(55).value(), binary.fields().get(55).value());
+    }
+
+    @Test
     void handlesOverridesAndMalformedFrames() {
         var custom = new IsoMessageParser(Map.of(39, new IsoMessageParser.FieldSpec("Response", 3, 3, "FIXED")));
         assertEquals("000",

@@ -20,9 +20,10 @@ public final class IsoMessageParser {
             encoding = encoding == null ? "ASCII" : encoding.toUpperCase();
             lengthEncoding = lengthEncoding == null ? "ASCII" : lengthEncoding.toUpperCase();
             if (name == null || name.isBlank() || name.length() > 80
-                    || !List.of("FIXED", "LLVAR", "LLLVAR").contains(type)
+                    || !List.of("FIXED", "LVAR", "LLVAR", "LLLVAR").contains(type)
                     || length < 0 || length > 999 || maxLength < 0 || (type.equals("FIXED") && length == 0)
-                    || (!type.equals("FIXED") && (maxLength == 0 || maxLength > (type.equals("LLVAR") ? 99 : 999)))
+                    || (!type.equals("FIXED") && (maxLength == 0
+                            || maxLength > (type.equals("LVAR") ? 9 : type.equals("LLVAR") ? 99 : 999)))
                     || !List.of("ASCII", "BCD", "HEX").contains(encoding)
                     || !List.of("ASCII", "BCD").contains(lengthEncoding)) {
                 throw new IllegalArgumentException("Invalid field specification");
@@ -45,9 +46,9 @@ public final class IsoMessageParser {
         Map<Integer, FieldSpec> merged = new LinkedHashMap<>(STANDARD);
         if (overrides != null) {
             overrides.forEach((id, spec) -> {
-                if (id == null || id < 2 || id > 128 || id == 65 || spec == null) {
+                if (id == null || id < 2 || id > 192 || id == 65 || id == 129 || spec == null) {
                     throw new IllegalArgumentException(
-                            "Field overrides must have IDs 2–128, excluding bitmap field 65");
+                            "Field overrides must have IDs 2–192, excluding bitmap fields 65 and 129");
                 }
                 merged.put(id, spec);
             });
@@ -88,12 +89,12 @@ public final class IsoMessageParser {
         if ((Integer.parseInt(primary.substring(0, 1), 16) & 8) != 0)
             bitmap += readBitmap(cursor, asciiBitmap);
         if (bitmap.length() == 32 && (Integer.parseInt(bitmap.substring(16, 17), 16) & 8) != 0)
-            throw new ParseException("Tertiary bitmaps are not supported", cursor.position);
+            bitmap += readBitmap(cursor, asciiBitmap);
 
         List<Integer> present = new ArrayList<>();
         Map<Integer, DecodedField> fields = new LinkedHashMap<>();
         for (int id = 2; id <= bitmap.length() * 4; id++) {
-            if (id == 65 || !bitSet(bitmap, id))
+            if (id == 65 || id == 129 || !bitSet(bitmap, id))
                 continue;
             present.add(id);
             FieldSpec spec = definitions.get(id);
@@ -103,7 +104,7 @@ public final class IsoMessageParser {
             int start = cursor.position;
             int length = spec.length();
             if (!spec.type().equals("FIXED")) {
-                int digits = spec.type().equals("LLVAR") ? 2 : 3;
+                int digits = spec.type().equals("LVAR") ? 1 : spec.type().equals("LLVAR") ? 2 : 3;
                 String prefix = spec.lengthEncoding().equals("BCD")
                         ? bcd(cursor.read((digits + 1) / 2, "field " + id + " length"), digits, false, start)
                         : cursor.readAscii(digits, "field " + id + " length");
@@ -113,8 +114,7 @@ public final class IsoMessageParser {
                 if (length > spec.maxLength())
                     throw new ParseException("Field " + id + " exceeds maximum length " + spec.maxLength(), start);
             }
-            boolean binary = spec.encoding().equals("HEX") || id == 52 || id == 64 || id == 128
-                    || (!asciiBitmap && id == 55);
+            boolean binary = spec.encoding().equals("HEX");
             String value = binary
                     ? java.util.HexFormat.of().withUpperCase().formatHex(cursor.read(length, "field " + id))
                     : spec.encoding().equals("BCD")
@@ -219,13 +219,13 @@ public final class IsoMessageParser {
         fixed(map, 49, 3, "Transaction currency code");
         fixed(map, 50, 3, "Settlement currency code");
         fixed(map, 51, 3, "Billing currency code");
-        fixed(map, 52, 8, "PIN data");
+        fixedHex(map, 52, 8, "PIN data");
         fixed(map, 53, 16, "Security control information");
-        fixed(map, 64, 8, "Message authentication code");
+        fixedHex(map, 64, 8, "Message authentication code");
         fixed(map, 70, 3, "Network management code");
         fixed(map, 90, 42, "Original data elements");
         fixed(map, 95, 42, "Replacement amounts");
-        fixed(map, 128, 8, "Message authentication code");
+        fixedHex(map, 128, 8, "Message authentication code");
         variable(map, 2, 19, "Primary account number", "LLVAR");
         variable(map, 32, 11, "Acquiring institution ID", "LLVAR");
         variable(map, 33, 11, "Forwarding institution ID", "LLVAR");
@@ -235,7 +235,7 @@ public final class IsoMessageParser {
         variable(map, 45, 76, "Track 1 data", "LLVAR");
         variable(map, 48, 999, "Additional data, private", "LLLVAR");
         variable(map, 54, 120, "Additional amounts", "LLLVAR");
-        variable(map, 55, 999, "ICC data", "LLLVAR");
+        map.put(55, new FieldSpec("ICC data", 0, 999, "LLLVAR", "HEX", "ASCII"));
         for (int id : new int[] { 56, 57, 58, 59, 60, 61, 62, 63, 120, 121, 122, 123, 124, 125, 126, 127 })
             variable(map, id, 999, "Private / reserved data", "LLLVAR");
         variable(map, 100, 11, "Receiving institution ID", "LLVAR");
@@ -246,6 +246,10 @@ public final class IsoMessageParser {
 
     private static void fixed(Map<Integer, FieldSpec> map, int id, int length, String name) {
         map.put(id, new FieldSpec(name, length, length, "FIXED"));
+    }
+
+    private static void fixedHex(Map<Integer, FieldSpec> map, int id, int length, String name) {
+        map.put(id, new FieldSpec(name, length, length, "FIXED", "HEX", "ASCII"));
     }
 
     private static void variable(Map<Integer, FieldSpec> map, int id, int max, String name, String type) {

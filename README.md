@@ -44,7 +44,7 @@ The machine-readable contract is in [docs/openapi.yaml](docs/openapi.yaml).
 
 `POST /api/v1/messages/compare` accepts `{"left": {…parse request…}, "right": {…parse request…}}`. The parse response has `mti`, `bitmap`, `presentFields`, `fields`, `consumedBytes`, and `totalBytes`. Each field has a name, masked value, length, byte offset, and encoded byte length. Compare adds `mtiStatus` and a list of differences; sensitive fields have `HIDDEN` status. Invalid input returns HTTP 400 with `error` and, for parse failures, `offset`. The per-instance limit is 60 API requests per minute per remote IP; excess requests return HTTP 429 and `Retry-After`.
 
-`ASCII_HEX_BITMAP` expects four ASCII MTI digits, 16 or 32 ASCII hex bitmap characters, then ASCII fields. `HEX_BINARY_BITMAP` expects hex byte pairs for the whole frame: ASCII MTI bytes, binary bitmap bytes and field bytes. Hex input permits whitespace, colons and hyphens. `headerBytes` skips an optional header before the MTI (0–64). Message length is limited to 16,384 characters.
+`ASCII_HEX_BITMAP` expects four ASCII MTI digits, then 16, 32 or 48 ASCII hex bitmap characters and field bytes. `HEX_BINARY_BITMAP` expects hex byte pairs for the whole frame: ASCII MTI bytes, binary bitmap bytes and field bytes. Field encoding comes from its definition; ICC data (DE 55), PIN data and MACs default to binary bytes. Hex input permits whitespace, colons and hyphens. `headerBytes` skips an optional header before the MTI (0–64). Message length is limited to 16,384 characters.
 
 For a processor-specific layout, pass `fieldOverrides` using field numbers as keys:
 
@@ -59,7 +59,7 @@ For a processor-specific layout, pass `fieldOverrides` using field numbers as ke
 }
 ```
 
-Types are `FIXED`, `LLVAR`, `LLLVAR`. Value encodings are `ASCII`, `BCD`, `HEX`; length encodings are `ASCII`, `BCD`. Packed BCD fields use right padding for odd digit counts. Unsupported fields fail with an explicit error. Tertiary bitmaps and proprietary nested fields are unsupported.
+Types are `FIXED`, `LVAR`, `LLVAR`, `LLLVAR`. Value encodings are `ASCII`, `BCD`, `HEX`; length encodings are `ASCII`, `BCD`. Packed BCD fields use right padding for odd digit counts. Secondary and tertiary bitmap indicators are read automatically. Tertiary data elements (DE 130–192) require field overrides. Unsupported fields fail with an explicit error. Proprietary nested fields remain unsupported.
 
 ## Structure
 
