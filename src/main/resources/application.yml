@@ -1,0 +1,27 @@
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+  tomcat:
+    max-http-form-post-size: 64KB
+spring:
+  application:
+    name: iso-8583-parser
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+app:
+  allowed-origins: ${APP_ALLOWED_ORIGINS:}
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.boot: INFO

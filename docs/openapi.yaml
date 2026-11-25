@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: InspectDiff API
+  version: 1.0.0
+  description: Public, masked ISO 8583 inspection API.
+servers:
+  - url: /
+paths:
+  /api/v1/messages/parse:
+    post:
+      summary: Decode one ISO 8583 message
+      operationId: parseMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: Decoded message with sensitive fields masked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/v1/messages/compare:
+    post:
+      summary: Decode and compare two ISO 8583 messages
+      operationId: compareMessages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [left, right]
+              properties:
+                left:
+                  $ref: '#/components/schemas/ParseRequest'
+                right:
+                  $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: Decoded messages and field differences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  left:
+                    $ref: '#/components/schemas/ParseResult'
+                  right:
+                    $ref: '#/components/schemas/ParseResult'
+                  mtiStatus:
+                    type: string
+                    enum: [MATCH, CHANGED]
+                  differences:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: integer}
+                        name: {type: string}
+                        left: {type: string, nullable: true}
+                        right: {type: string, nullable: true}
+                        status:
+                          type: string
+                          enum: [MATCH, CHANGED, LEFT_ONLY, RIGHT_ONLY, HIDDEN]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+components:
+  schemas:
+    ParseRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 16384
+        format:
+          type: string
+          enum: [ASCII_HEX_BITMAP, HEX_BINARY_BITMAP]
+          default: ASCII_HEX_BITMAP
+        headerBytes:
+          type: integer
+          minimum: 0
+          maximum: 64
+          default: 0
+        revealSensitive:
+          type: boolean
+          description: Must be false or omitted on the public API.
+        fieldOverrides:
+          type: object
+          maxProperties: 126
+          additionalProperties:
+            $ref: '#/components/schemas/FieldSpec'
+    FieldSpec:
+      type: object
+      required: [name, length, maxLength, type]
+      properties:
+        name: {type: string, maxLength: 80}
+        length: {type: integer, minimum: 0, maximum: 999}
+        maxLength: {type: integer, minimum: 0, maximum: 999}
+        type: {type: string, enum: [FIXED, LLVAR, LLLVAR]}
+        encoding: {type: string, enum: [ASCII, BCD, HEX], default: ASCII}
+        lengthEncoding: {type: string, enum: [ASCII, BCD], default: ASCII}
+    ParseResult:
+      type: object
+      properties:
+        mti: {type: string}
+        bitmap: {type: string}
+        presentFields:
+          type: array
+          items: {type: integer}
+        fields:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              id: {type: integer}
+              name: {type: string}
+              value: {type: string}
+              length: {type: integer}
+              offset: {type: integer}
+              encodedLength: {type: integer}
+        consumedBytes: {type: integer}
+        totalBytes: {type: integer}
+    Error:
+      type: object
+      properties:
+        error: {type: string}
+        offset: {type: integer}
+        field: {type: string}
+  responses:
+    BadRequest:
+      description: Invalid JSON, request, field specification or ISO message
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Per-instance request limit exceeded. Retry-After is in seconds.
+      headers:
+        Retry-After:
+          schema: {type: integer}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

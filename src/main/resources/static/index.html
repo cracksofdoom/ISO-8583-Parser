@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>InspectDiff - ISO 8583 decoder</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#message">Skip to input</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <rect x="8.5" y="8.5" width="12" height="12" rx="2" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+      <span class="brand-name">InspectDiff</span>
+      <span class="brand-sub">ISO 8583 workbench</span>
+    </div>
+    <span class="top-note">Local session, no message storage</span>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">Decode and compare ISO 8583 frames</h1>
+      <p>Paste a raw frame to see its MTI, bitmap and fields. Add a second frame to see exactly which fields changed.</p>
+    </section>
+
+    <section class="workspace" aria-labelledby="input-title">
+      <div class="section-head">
+        <h2 id="input-title">Input frames</h2>
+        <div class="section-actions">
+          <span class="shortcut">Ctrl or Cmd + Enter to decode</span>
+          <button id="example" class="btn btn-ghost" type="button">Load example</button>
+          <button id="clear" class="btn btn-ghost" type="button">Clear all</button>
+        </div>
+      </div>
+
+      <div class="input-grid">
+        <div class="input-card">
+          <div class="card-head">
+            <label for="message">Message A <span>Primary frame</span></label>
+            <div class="card-actions">
+              <button class="btn btn-ghost btn-sm" type="button" data-paste="message">Paste</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-clear="message">Clear</button>
+            </div>
+          </div>
+          <textarea id="message" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste MTI, bitmap and data fields here" aria-describedby="countA hintA"></textarea>
+          <div class="input-foot">
+            <span id="countA">0 characters</span>
+            <span id="hintA" class="hint" role="status"></span>
+          </div>
+        </div>
+
+        <div class="input-card">
+          <div class="card-head">
+            <label for="compareMessage">Message B <span>Optional, for comparison</span></label>
+            <div class="card-actions">
+              <button id="swap" class="btn btn-ghost btn-sm" type="button">Swap with A</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-paste="compareMessage">Paste</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-clear="compareMessage">Clear</button>
+            </div>
+          </div>
+          <textarea id="compareMessage" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a second frame to compare" aria-describedby="countB hintB"></textarea>
+          <div class="input-foot">
+            <span id="countB">0 characters</span>
+            <span id="hintB" class="hint" role="status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="field-group">
+          <label for="format">Input format</label>
+          <select id="format">
+            <option value="ASCII_HEX_BITMAP">ASCII frame, hex bitmap</option>
+            <option value="HEX_BINARY_BITMAP">Hex bytes, binary bitmap</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="header">Header bytes</label>
+          <input id="header" type="number" min="0" max="64" value="0" inputmode="numeric">
+        </div>
+        <span class="privacy-note">Sensitive fields are masked in public results</span>
+        <button id="decode" class="btn btn-primary" type="button">
+          <span class="btn-label">Inspect and decode</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="resultsSection" class="results" aria-labelledby="results-title">
+      <div class="section-head">
+        <h2 id="results-title" tabindex="-1">Decoded output</h2>
+        <div class="section-actions">
+          <button id="download" class="btn btn-ghost" type="button" hidden>Download JSON</button>
+          <button id="copy" class="btn btn-ghost" type="button" hidden>Copy JSON</button>
+        </div>
+      </div>
+
+      <div id="notice" class="notice" role="status">Paste an ISO 8583 frame above, then choose Inspect and decode.</div>
+      <div id="summary" class="summary" hidden></div>
+
+      <div id="output" hidden>
+        <div class="panel">
+          <div class="panel-bar">
+            <div class="tabs" role="tablist" aria-label="Result views">
+              <button class="tab" role="tab" id="tab-fields" type="button" aria-selected="true" aria-controls="pane-fields" data-tab="fields">Fields <span class="count" id="fieldsCount"></span></button>
+              <button class="tab" role="tab" id="tab-diff" type="button" aria-selected="false" aria-controls="pane-diff" data-tab="diff" tabindex="-1" hidden>Differences <span class="count" id="diffCount"></span></button>
+              <button class="tab" role="tab" id="tab-json" type="button" aria-selected="false" aria-controls="pane-json" data-tab="json" tabindex="-1">JSON</button>
+            </div>
+          </div>
+
+          <div id="pane-fields" role="tabpanel" aria-labelledby="tab-fields">
+            <div class="pane-tools">
+              <div class="search">
+                <label for="fieldSearch" class="sr-only">Filter fields</label>
+                <input id="fieldSearch" type="search" placeholder="Filter by number, name or value" autocomplete="off">
+              </div>
+              <div id="sideToggle" class="segmented" role="group" aria-label="Frame to show" hidden>
+                <button type="button" data-side="left" aria-pressed="true">Message A</button>
+                <button type="button" data-side="right" aria-pressed="false">Message B</button>
+              </div>
+            </div>
+            <div id="fields"></div>
+          </div>
+
+          <div id="pane-diff" role="tabpanel" aria-labelledby="tab-diff" hidden>
+            <div class="pane-tools">
+              <div id="diffLegend" class="legend"></div>
+              <label class="check">
+                <input id="diffOnly" type="checkbox">
+                <span>Differences only</span>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col">Field</th><th scope="col">Message A</th><th scope="col">Message B</th><th scope="col">Status</th></tr></thead>
+                <tbody id="diff"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="pane-json" role="tabpanel" aria-labelledby="tab-json" hidden>
+            <pre id="json" tabindex="0"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span class="footer-name">InspectDiff</span>
+    <span>ISO 8583 field layouts vary by network and institution. Confirm the field specification for your integration.</span>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
