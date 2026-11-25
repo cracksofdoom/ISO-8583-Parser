@@ -17,9 +17,6 @@ import org.junit.jupiter.api.Test;
 
 import net.cracksofdoom.parser.Converters;
 import net.cracksofdoom.parser.Strings;
-import net.cracksofdoom.parser.field.CompoundField;
-import net.cracksofdoom.parser.field.FixedCompoundField;
-import net.cracksofdoom.parser.field.IsoField;
 
 /**
  *

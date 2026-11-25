@@ -6,8 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-import net.cracksofdoom.parser.core.IsoMessageParser;
-
 class IsoMessageParserTest {
     private final IsoMessageParser parser = new IsoMessageParser(null);
     private static final String ECHO = "0800822000000000000004000000000000001125210025123456301";

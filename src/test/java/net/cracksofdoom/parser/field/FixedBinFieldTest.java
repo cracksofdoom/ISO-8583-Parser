@@ -18,9 +18,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import net.cracksofdoom.parser.Strings;
-import net.cracksofdoom.parser.field.Field;
-import net.cracksofdoom.parser.field.FixedBinField;
-import net.cracksofdoom.parser.field.IsoField;
 
 /**
  *
